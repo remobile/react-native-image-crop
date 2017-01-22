@@ -81,9 +81,9 @@ var styles = StyleSheet.create({
 
 ## Screencasts
 
-![crop1](https://github.com/remobile/react-native-button/blob/master/screencasts/crop1.jpg)
-![crop2](https://github.com/remobile/react-native-button/blob/master/screencasts/crop2.jpg)
-![crop3](https://github.com/remobile/react-native-button/blob/master/screencasts/crop3.jpg)
+![crop1](https://github.com/remobile/react-native-image-crop/blob/master/screencasts/crop1.jpg)
+![crop2](https://github.com/remobile/react-native-image-crop/blob/master/screencasts/crop2.jpg)
+![crop3](https://github.com/remobile/react-native-image-crop/blob/master/screencasts/crop3.jpg)
 
 #### Props
 - `imageWidth: PropTypes.number.required`  //must be image real origin imageWidth
