@@ -1,6 +1,6 @@
 {
     "name": "@remobile/react-native-image-crop",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A component for react-native crop image, such as edit user head",
     "main": "index.js",
     "author": {
