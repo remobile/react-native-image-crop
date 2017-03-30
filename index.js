@@ -1,16 +1,16 @@
-import React from 'react'
+import React from 'react';
 import {
     View,
     PanResponder,
     Animated,
     Image,
     StyleSheet,
-} from 'react-native'
+} from 'react-native';
 
-var ClipRect = require('@remobile/react-native-clip-rect');
+const ClipRect = require('@remobile/react-native-clip-rect');
 
 module.exports = React.createClass({
-    getDefaultProps() {
+    getDefaultProps () {
         return {
             editRectWidth: 212,
             editRectHeight: 212,
@@ -18,8 +18,8 @@ module.exports = React.createClass({
             overlayColor: 'rgba(0, 0, 0, 0.5)',
         };
     },
-    componentWillMount() {
-        const {editRectWidth, editRectHeight, imageWidth, imageHeight} = this.props;
+    componentWillMount () {
+        const { editRectWidth, editRectHeight, imageWidth, imageHeight } = this.props;
         // 上次/当前/动画 x 位移
         this.lastGestureDx = null;
         this.translateX = 0;
@@ -36,15 +36,15 @@ module.exports = React.createClass({
         this.lastZoomDistance = null;
         this.currentZoomDistance = 0;
 
-        //图片大小
+        // 图片大小
         if (imageWidth < imageHeight) {
             this.imageMinWidth = editRectWidth;
-            this.imageMinHeight = imageHeight/imageWidth * editRectHeight;
+            this.imageMinHeight = imageHeight / imageWidth * editRectHeight;
         } else {
             this.imageMinWidth = imageWidth / imageHeight * editRectWidth;
             this.imageMinHeight = editRectHeight;
         }
-        this.imageMinSize =  Math.floor(Math.sqrt(this.imageMinWidth * this.imageMinWidth + this.imageMinHeight * this.imageMinHeight));
+        this.imageMinSize = Math.floor(Math.sqrt(this.imageMinWidth * this.imageMinWidth + this.imageMinHeight * this.imageMinHeight));
 
         this.imagePanResponder = PanResponder.create({
             onStartShouldSetPanResponder: (evt, gestureState) => true,
@@ -59,7 +59,7 @@ module.exports = React.createClass({
                 this.lastZoomDistance = null;
             },
             onPanResponderMove: (evt, gestureState) => {
-                const {changedTouches} = evt.nativeEvent;
+                const { changedTouches } = evt.nativeEvent;
                 if (changedTouches.length <= 1) {
                     this.translateX += (this.lastGestureDx === null) ? 0 : gestureState.dx - this.lastGestureDx;
                     this.translateY += (this.lastGestureDy === null) ? 0 : gestureState.dy - this.lastGestureDy;
@@ -84,13 +84,13 @@ module.exports = React.createClass({
                 }
             },
             onPanResponderRelease: (evt, gestureState) => {},
-            onPanResponderTerminate: (evt, gestureState)=> {}
-        })
+            onPanResponderTerminate: (evt, gestureState) => {},
+        });
     },
-    updateTranslate() {
-        const {editRectWidth, editRectHeight} = this.props;
+    updateTranslate () {
+        const { editRectWidth, editRectHeight } = this.props;
         const xOffest = (this.imageMinWidth - editRectWidth / this.scale) / 2;
-        const yOffest = (this.imageMinHeight - editRectHeight / this.scale) /2;
+        const yOffest = (this.imageMinHeight - editRectHeight / this.scale) / 2;
 
         if (this.translateX > xOffest) {
             this.translateX = xOffest;
@@ -107,49 +107,49 @@ module.exports = React.createClass({
         this.animatedTranslateX.setValue(this.translateX);
         this.animatedTranslateY.setValue(this.translateY);
     },
-    getCropData() {
-        const {editRectWidth, editRectHeight, imageWidth, imageHeight} = this.props;
+    getCropData () {
+        const { editRectWidth, editRectHeight, imageWidth, imageHeight } = this.props;
         const ratioX = imageWidth / this.imageMinWidth;
         const ratioY = imageHeight / this.imageMinHeight;
         const width = editRectWidth / this.scale;
         const height = editRectHeight / this.scale;
         const x = this.imageMinWidth / 2 - (width / 2 + this.translateX);
-        const y = this.imageMinHeight / 2 - (height  / 2 + this.translateY);
+        const y = this.imageMinHeight / 2 - (height / 2 + this.translateY);
         return {
-            offset: {x: x*ratioX, y: y*ratioY},
-            size: {width: width*ratioX, height: height*ratioY},
+            offset: { x: x * ratioX, y: y * ratioY },
+            size: { width: width * ratioX, height: height * ratioY },
         };
     },
-    render() {
+    render () {
         const animatedStyle = {
             transform: [{
-                scale: this.animatedScale
+                scale: this.animatedScale,
             }, {
-                translateX: this.animatedTranslateX
+                translateX: this.animatedTranslateX,
             }, {
-                translateY: this.animatedTranslateY
-            }]
-        }
-        const {editRectWidth, editRectHeight, editRectRadius, source, style, overlayColor} = this.props;
+                translateY: this.animatedTranslateY,
+            }],
+        };
+        const { editRectWidth, editRectHeight, editRectRadius, source, style, overlayColor } = this.props;
         return (
             <View style={[styles.container, style]} {...this.imagePanResponder.panHandlers}>
                 <Animated.View style={animatedStyle}>
-                    <Image resizeMode='contain' style={{width:this.imageMinWidth, height:this.imageMinHeight}} source={source}/>
+                    <Image resizeMode='contain' style={{ width:this.imageMinWidth, height:this.imageMinHeight }} source={source} />
                 </Animated.View>
                 <View style={styles.editboxContainer}>
-                    <View style={{flex: 1, backgroundColor: overlayColor}} />
+                    <View style={{ flex: 1, backgroundColor: overlayColor }} />
                     <View style={styles.editboxMiddle} >
-                        <View style={{flex: 1, backgroundColor: overlayColor}} />
-                        <View style={{width: editRectWidth, height: editRectHeight}} >
-                            <ClipRect style={{width: editRectWidth, height: editRectHeight, borderRadius: editRectRadius, color: overlayColor}} />
-                            <View style={[styles.clipRectBoder, {borderRadius: editRectRadius}]} />
+                        <View style={{ flex: 1, backgroundColor: overlayColor }} />
+                        <View style={{ width: editRectWidth, height: editRectHeight }} >
+                            <ClipRect style={{ width: editRectWidth, height: editRectHeight, borderRadius: editRectRadius, color: overlayColor }} />
+                            <View style={[styles.clipRectBoder, { borderRadius: editRectRadius }]} />
                         </View>
-                        <View style={{flex: 1, backgroundColor: overlayColor}} />
+                        <View style={{ flex: 1, backgroundColor: overlayColor }} />
                     </View>
-                    <View style={{flex: 1, backgroundColor: overlayColor}} />
+                    <View style={{ flex: 1, backgroundColor: overlayColor }} />
                 </View>
             </View>
-        )
+        );
     },
 });
 
