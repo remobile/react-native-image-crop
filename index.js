@@ -4,10 +4,16 @@ import {
     PanResponder,
     Animated,
     Image,
+    TouchableOpacity,
     StyleSheet,
 } from 'react-native';
 
 const ClipRect = require('@remobile/react-native-clip-rect');
+const flip_horizontally = require('./img/flip_horizontally.png');
+const flip_vertically = require('./img/flip_vertically.png');
+const rotate_left = require('./img/rotate_left.png');
+const rotate_right = require('./img/rotate_right.png');
+const reset = require('./img/reset.png');
 
 module.exports = React.createClass({
     getDefaultProps () {
@@ -35,6 +41,16 @@ module.exports = React.createClass({
         this.animatedScale = new Animated.Value(this.scale);
         this.lastZoomDistance = null;
         this.currentZoomDistance = 0;
+
+        // 旋转
+        this.rotate = 0;
+        this.animatedRotate = new Animated.Value(this.rotate);
+
+        // 颠倒
+        this.flipH = 0;
+        this.animatedFlipH = new Animated.Value(this.flipH);
+        this.flipV = 0;
+        this.animatedFlipV = new Animated.Value(this.flipV);
 
         // 图片大小
         if (imageWidth < imageHeight) {
@@ -89,23 +105,43 @@ module.exports = React.createClass({
     },
     updateTranslate () {
         const { editRectWidth, editRectHeight } = this.props;
-        const xOffest = (this.imageMinWidth - editRectWidth / this.scale) / 2;
-        const yOffest = (this.imageMinHeight - editRectHeight / this.scale) / 2;
+        if (this.rotate !== 90 && this.rotate !== 270) {
+            const xOffest = (this.imageMinWidth - editRectWidth / this.scale) / 2;
+            const yOffest = (this.imageMinHeight - editRectHeight / this.scale) / 2;
 
-        if (this.translateX > xOffest) {
-            this.translateX = xOffest;
+            if (this.translateX > xOffest) {
+                this.translateX = xOffest;
+            }
+            if (this.translateX < -xOffest) {
+                this.translateX = -xOffest;
+            }
+            if (this.translateY > yOffest) {
+                this.translateY = yOffest;
+            }
+            if (this.translateY < -yOffest) {
+                this.translateY = -yOffest;
+            }
+            this.animatedTranslateX.setValue(this.translateX);
+            this.animatedTranslateY.setValue(this.translateY);
+        } else {
+            const xOffest = (this.imageMinWidth - editRectWidth / this.scale) / 2;
+            const yOffest = (this.imageMinHeight - editRectHeight / this.scale) / 2;
+
+            if (this.translateX > yOffest) {
+                this.translateX = yOffest;
+            }
+            if (this.translateX < -yOffest) {
+                this.translateX = -yOffest;
+            }
+            if (this.translateY > xOffest) {
+                this.translateY = xOffest;
+            }
+            if (this.translateY < -xOffest) {
+                this.translateY = -xOffest;
+            }
+            this.animatedTranslateX.setValue(this.translateY);
+            this.animatedTranslateY.setValue(this.translateX);
         }
-        if (this.translateX < -xOffest) {
-            this.translateX = -xOffest;
-        }
-        if (this.translateY > yOffest) {
-            this.translateY = yOffest;
-        }
-        if (this.translateY < -yOffest) {
-            this.translateY = -yOffest;
-        }
-        this.animatedTranslateX.setValue(this.translateX);
-        this.animatedTranslateY.setValue(this.translateY);
     },
     getCropData () {
         const { editRectWidth, editRectHeight, imageWidth, imageHeight } = this.props;
@@ -118,12 +154,65 @@ module.exports = React.createClass({
         return {
             offset: { x: x * ratioX, y: y * ratioY },
             size: { width: width * ratioX, height: height * ratioY },
+            rotate: this.rotate,
+            flipV: this.flipV,
+            flipH: this.flipH,
         };
+    },
+    doRotate (isLeft) {
+        if (isLeft) {
+            if (this.rotate === 0) {
+                this.rotate = 360;
+            }
+            this.rotate -= 90;
+        } else {
+            this.rotate += 90;
+            if (this.rotate === 360) {
+                this.rotate = 0;
+            }
+        }
+        this.animatedRotate.setValue(this.rotate);
+    },
+    doFlip (isVertical) {
+        if (isVertical) {
+            this.flipV = this.flipV ^ 1;
+            this.animatedFlipV.setValue(this.flipV);
+        } else {
+            this.flipH = this.flipH ^ 1;
+            this.animatedFlipH.setValue(this.flipH);
+        }
+    },
+    doReset () {
+        this.rotate = 0;
+        this.animatedRotate.setValue(this.rotate);
+
+        this.flipV = 0;
+        this.animatedFlipV.setValue(this.flipV);
+
+        this.flipH = 0;
+        this.animatedFlipH.setValue(this.flipH);
+
+        this.translateX = 0;
+        this.animatedTranslateX.setValue(this.translateX);
+
+        this.translateY = 0;
+        this.animatedTranslateY.setValue(this.translateY);
+
+        this.scale = 1;
+        this.animatedScale.setValue(this.scale);
+        this.lastZoomDistance = null;
+        this.currentZoomDistance = 0;
     },
     render () {
         const animatedStyle = {
             transform: [{
                 scale: this.animatedScale,
+            }, {
+                rotateZ: this.animatedRotate.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '360deg'] }),
+            }, {
+                rotateX: this.animatedFlipV.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }),
+            }, {
+                rotateY: this.animatedFlipH.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }),
             }, {
                 translateX: this.animatedTranslateX,
             }, {
@@ -132,21 +221,40 @@ module.exports = React.createClass({
         };
         const { editRectWidth, editRectHeight, editRectRadius, source, style, overlayColor } = this.props;
         return (
-            <View style={[styles.container, style]} {...this.imagePanResponder.panHandlers}>
-                <Animated.View style={animatedStyle}>
-                    <Image resizeMode='contain' style={{ width:this.imageMinWidth, height:this.imageMinHeight }} source={source} />
-                </Animated.View>
-                <View style={styles.editboxContainer}>
-                    <View style={{ flex: 1, backgroundColor: overlayColor }} />
-                    <View style={styles.editboxMiddle} >
+            <View style={{ flex: 1 }}>
+                <View style={[styles.container, style]} {...this.imagePanResponder.panHandlers}>
+                    <Animated.View style={animatedStyle}>
+                        <Image resizeMode='contain' style={{ width: this.imageMinWidth, height: this.imageMinHeight }} source={source} />
+                    </Animated.View>
+                    <View style={styles.editboxContainer}>
                         <View style={{ flex: 1, backgroundColor: overlayColor }} />
-                        <View style={{ width: editRectWidth, height: editRectHeight }} >
-                            <ClipRect style={{ width: editRectWidth, height: editRectHeight, borderRadius: editRectRadius, color: overlayColor }} />
-                            <View style={[styles.clipRectBoder, { borderRadius: editRectRadius }]} />
+                        <View style={styles.editboxMiddle} >
+                            <View style={{ flex: 1, backgroundColor: overlayColor }} />
+                            <View style={{ width: editRectWidth, height: editRectHeight }} >
+                                <ClipRect style={{ width: editRectWidth, height: editRectHeight, borderRadius: editRectRadius, color: overlayColor }} />
+                                <View style={[styles.clipRectBoder, { borderRadius: editRectRadius }]} />
+                            </View>
+                            <View style={{ flex: 1, backgroundColor: overlayColor }} />
                         </View>
                         <View style={{ flex: 1, backgroundColor: overlayColor }} />
                     </View>
-                    <View style={{ flex: 1, backgroundColor: overlayColor }} />
+                </View>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={this.doRotate.bind(null, 0)} style={styles.buttonOuter}>
+                        <Image source={rotate_right} style={styles.button} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={this.doRotate.bind(null, 1)} style={styles.buttonOuter}>
+                        <Image source={rotate_left} style={styles.button} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={this.doFlip.bind(null, 0)} style={styles.buttonOuter}>
+                        <Image source={flip_vertically} style={styles.button} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={this.doFlip.bind(null, 1)} style={styles.buttonOuter}>
+                        <Image source={flip_horizontally} style={styles.button} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={this.doReset} style={styles.buttonOuter}>
+                        <Image source={reset} style={styles.button} />
+                    </TouchableOpacity>
                 </View>
             </View>
         );
@@ -179,5 +287,30 @@ const styles = StyleSheet.create({
     },
     editboxMiddle: {
         flexDirection: 'row',
+    },
+    buttonContainer: {
+        position: 'absolute',
+        height: 40,
+        width: sr.w,
+        paddingLeft: (sr.w - 250) / 2,
+        left: 0,
+        top: 0,
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    buttonOuter: {
+        width: 30,
+        height: 30,
+        marginLeft: 10,
+        marginRight: 10,
+        marginTop: 10,
+        borderRadius: 15,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    button: {
+        width: 25,
+        height: 25,
     },
 });
